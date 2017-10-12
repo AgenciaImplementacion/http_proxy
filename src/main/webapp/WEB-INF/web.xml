@@ -9,7 +9,7 @@
   </session-config>
   <context-param>
     <param-name>proxyPropPath</param-name>
-    <param-value>/proxy.properties</param-value>
+    <param-value>/WEB-INF/proxy.properties</param-value>
   </context-param>
   <servlet>
     <servlet-name>HttpProxy</servlet-name>

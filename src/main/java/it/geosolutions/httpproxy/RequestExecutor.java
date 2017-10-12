@@ -48,56 +48,58 @@ import org.apache.commons.httpclient.auth.AuthScope;
  */
 public class RequestExecutor {
 
-	ProxyConfig proxyConfig;
-	
-	public RequestExecutor(ProxyConfig config) {
+    ProxyConfig proxyConfig;
+
+    public RequestExecutor(ProxyConfig config) {
         this.proxyConfig = config;
     }
-	
-	private final static Logger LOGGER = Logger.getLogger(RequestExecutor.class.toString());
-	
-	/**
-     * Executes the {@link HttpMethod} passed in and sends the proxy response back to the client via the given {@link HttpServletResponse}
-     * 
-     * @param httpMethodProxyRequest An object representing the proxy request to be made
-     * @param httpServletResponse An object by which we can send the proxied response back to the client
+
+    private final static Logger LOGGER = Logger.getLogger(RequestExecutor.class.toString());
+
+    /**
+     * Executes the {@link HttpMethod} passed in and sends the proxy response
+     * back to the client via the given {@link HttpServletResponse}
+     *
+     * @param httpMethodProxyRequest An object representing the proxy request to
+     * be made
+     * @param httpServletResponse An object by which we can send the proxied
+     * response back to the client
      * @param digest
      * @throws IOException Can be thrown by the {@link HttpClient}.executeMethod
-     * @throws ServletException Can be thrown to indicate that another error has occurred
+     * @throws ServletException Can be thrown to indicate that another error has
+     * occurred
      */
     void executeProxyRequest(HttpClient httpClient, HttpMethod httpMethodProxyRequest,
             HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
             String user, String password, ProxyInfo proxyInfo, RequestExecutorCallbacks callbacks) throws IOException, ServletException {
-    	
-    	//???? ???
+
+        //???? ???
 //    	httpClient.getState().clearCredentials();
 //    	httpClient.getState().clearProxyCredentials();
 //    	httpClient.getState().clearCookies();
-    	///////
-    	
+        ///////
         if (user != null && password != null) {
             //Authenticate user
-        	UsernamePasswordCredentials upc = new UsernamePasswordCredentials(user, password);
+            UsernamePasswordCredentials upc = new UsernamePasswordCredentials(user, password);
             //multiThreadedHttpClient.getState().setCredentials(AuthScope.ANY, upc);
-        	httpClient.getState().setCredentials(AuthScope.ANY, upc);
-        	httpClient.getParams().setAuthenticationPreemptive(proxyConfig.isAuthorizationPreemptive());
+            httpClient.getState().setCredentials(AuthScope.ANY, upc);
+            httpClient.getParams().setAuthenticationPreemptive(proxyConfig.isAuthorizationPreemptive());
             httpMethodProxyRequest.setDoAuthentication(true);
         } else {
-        	//Do not authenticate user and remove existing authentication...
-        	httpMethodProxyRequest.setDoAuthentication(false);
+            //Do not authenticate user and remove existing authentication...
+            httpMethodProxyRequest.setDoAuthentication(false);
         }
-        
+
         httpMethodProxyRequest.setFollowRedirects(false);
 
         InputStream inputStreamServerResponse = null;
         ByteArrayOutputStream baos = null;
-        
+
         try {
 
             // //////////////////////////
             // Execute the request
             // //////////////////////////
-
             int intProxyResponseCode = httpClient.executeMethod(httpMethodProxyRequest);
 
             //onRemoteResponse(httpMethodProxyRequest);
@@ -109,7 +111,6 @@ public class RequestExecutor {
             // org.tigris.noodle.filters.CheckForRedirect
             // Hooray for open source software
             // ////////////////////////////////////////////////////////////////////////////////
-
             if (intProxyResponseCode >= HttpServletResponse.SC_MULTIPLE_CHOICES /* 300 */
                     && intProxyResponseCode < HttpServletResponse.SC_NOT_MODIFIED /* 304 */) {
 
@@ -127,7 +128,6 @@ public class RequestExecutor {
                 // Modify the redirect to go to this proxy
                 // servlet rather that the proxied host
                 // /////////////////////////////////////////////
-
                 String stringMyHostName = httpServletRequest.getServerName();
 
                 if (httpServletRequest.getServerPort() != 80) {
@@ -151,7 +151,6 @@ public class RequestExecutor {
                 // responds w/ a 304 saying I'm not going to send the
                 // body because the file has not changed.
                 // ///////////////////////////////////////////////////////////////
-
                 httpServletResponse.setIntHeader(Utils.CONTENT_LENGTH_HEADER_NAME, 0);
                 httpServletResponse.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
 
@@ -161,13 +160,11 @@ public class RequestExecutor {
             // /////////////////////////////////////////////
             // Pass the response code back to the client
             // /////////////////////////////////////////////
-
             httpServletResponse.setStatus(intProxyResponseCode);
 
             // /////////////////////////////////////////////
             // Pass response headers back to the client
             // /////////////////////////////////////////////
-
             Header[] headerArrayResponse = httpMethodProxyRequest.getResponseHeaders();
 
             for (Header header : headerArrayResponse) {
@@ -175,70 +172,73 @@ public class RequestExecutor {
                 // /////////////////////////
                 // Skip GZIP Responses
                 // /////////////////////////
-
                 if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_ACCEPT_ENCODING)
-                        && header.getValue().toLowerCase().contains("gzip"))
+                        && header.getValue().toLowerCase().contains("gzip")) {
                     continue;
-                else if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_CONTENT_ENCODING)
-                        && header.getValue().toLowerCase().contains("gzip"))
+                } else if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_CONTENT_ENCODING)
+                        && header.getValue().toLowerCase().contains("gzip")) {
                     continue;
-                else if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_TRANSFER_ENCODING))
+                } else if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_TRANSFER_ENCODING)) {
                     continue;
-//                else if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_WWW_AUTHENTICATE))
-//                    continue;                
-                else
+                } //                else if (header.getName().equalsIgnoreCase(Utils.HTTP_HEADER_WWW_AUTHENTICATE))
+                //                    continue;                
+                else {
                     httpServletResponse.setHeader(header.getName(), header.getValue());
+                }
             }
 
             // ///////////////////////////////////
             // Send the content to the client
             // ///////////////////////////////////
-            
             inputStreamServerResponse = httpMethodProxyRequest
-            		.getResponseBodyAsStream();
-            
-            if(inputStreamServerResponse != null){
+                    .getResponseBodyAsStream();
+
+            if (inputStreamServerResponse != null) {
                 byte[] b = new byte[proxyConfig.getDefaultStreamByteSize()];
-                
+
                 baos = new ByteArrayOutputStream(b.length);
-                
+
                 int read = 0;
-    		    while((read = inputStreamServerResponse.read(b)) > 0){ 
-    		      	baos.write(b, 0, read);
-    		        baos.flush();
-    		    }
-    	            
-    		    baos.writeTo(httpServletResponse.getOutputStream());
+                while ((read = inputStreamServerResponse.read(b)) > 0) {
+                    baos.write(b, 0, read);
+                    baos.flush();
+                }
+
+                baos.writeTo(httpServletResponse.getOutputStream());
             }
-            
+
         } catch (HttpException e) {
-            if (LOGGER.isLoggable(Level.SEVERE))
+            if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, "Error executing HTTP method ", e);
+            }
         } finally {
-			try {
-	        	if(inputStreamServerResponse != null)
-	        		inputStreamServerResponse.close();
-			} catch (IOException e) {
-				if (LOGGER.isLoggable(Level.SEVERE))
-					LOGGER.log(Level.SEVERE,
-							"Error closing request input stream ", e);
-				throw new ServletException(e.getMessage());
-			}
-			
-			try {
-	        	if(baos != null){
-	        		baos.flush();
-	        		baos.close();
-	        	}
-			} catch (IOException e) {
-				if (LOGGER.isLoggable(Level.SEVERE))
-					LOGGER.log(Level.SEVERE,
-							"Error closing response stream ", e);
-				throw new ServletException(e.getMessage());
-			}
-        	
+            try {
+                if (inputStreamServerResponse != null) {
+                    inputStreamServerResponse.close();
+                }
+            } catch (IOException e) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE,
+                            "Error closing request input stream ", e);
+                }
+                throw new ServletException(e.getMessage());
+            }
+
+            try {
+                if (baos != null) {
+                    baos.flush();
+                    baos.close();
+                }
+            } catch (IOException e) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE,
+                            "Error closing response stream ", e);
+                }
+                throw new ServletException(e.getMessage());
+            }
+
             httpMethodProxyRequest.releaseConnection();
-            
+
         }
     }
 }

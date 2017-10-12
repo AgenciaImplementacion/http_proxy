@@ -19,6 +19,7 @@
  */
 package it.geosolutions.httpproxy;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -31,41 +32,44 @@ import javax.servlet.ServletContext;
 
 /**
  * ProxyConfig class to define the proxy configuration.
- * 
+ *
  * @author Tobia Di Pisa at tobia.dipisa@geo-solutions.it
  */
 final class ProxyConfig {
 
     private final static Logger LOGGER = Logger.getLogger(ProxyConfig.class.toString());
 
-    
     private String operationMode;
-    
+
     private boolean isAuthorizationPreemptive;
-    
-    
+
     /**
-     * A list of regular expressions describing hostnames the proxy is permitted to forward to
+     * A list of regular expressions describing hostnames the proxy is permitted
+     * to forward to
      */
     private Set<String> hostnameWhitelist = new HashSet<String>();
 
     /**
-     * A list of regular expressions describing MIMETypes the proxy is permitted to forward
+     * A list of regular expressions describing MIMETypes the proxy is permitted
+     * to forward
      */
     private Set<String> mimetypeWhitelist = new HashSet<String>();
 
     /**
-     * A list of regular expressions describing Request Types the proxy is permitted to forward
+     * A list of regular expressions describing Request Types the proxy is
+     * permitted to forward
      */
     private Set<String> reqtypeWhitelist = new HashSet<String>();
 
     /**
-     * A list of regular expressions describing request METHODS the proxy is permitted to forward
+     * A list of regular expressions describing request METHODS the proxy is
+     * permitted to forward
      */
     private Set<String> methodsWhitelist = new HashSet<String>();
 
     /**
-     * A list of regular expressions describing request HOSTS the proxy is permitted to forward
+     * A list of regular expressions describing request HOSTS the proxy is
+     * permitted to forward
      */
     private Set<String> hostsWhitelist = new HashSet<String>();
 
@@ -98,10 +102,10 @@ final class ProxyConfig {
      * The maximum connections available per host
      */
     private int defaultMaxConnectionsPerHost = 6;
-    
+
     private int defaultStreamByteSize = 1024;
 
-	/**
+    /**
      * @param context
      * @param propertiesFilePath
      */
@@ -114,78 +118,84 @@ final class ProxyConfig {
 
     /**
      * Provide the proxy configuration
-     * 
+     *
      * @throws IOException
      */
     private void configProxy() {
         Properties props = propertiesLoader();
 
         if (props != null) {
-        	// ////////////////////////////////////////////////////////////
-        	// Load proxy configuration Operation Mode
-        	// ////////////////////////////////////////////////////////////
-        	
-        	String operationMode = props.getProperty("operationMode");
-            if (OperationMode.SHARED_MULTITHREADED.equalsIgnoreCase(operationMode) ||
-            		OperationMode.PER_REQUEST.equalsIgnoreCase(operationMode) || 
-            		OperationMode.PER_SESSION.equalsIgnoreCase(operationMode)) {
-            	this.setOperationMode(operationMode);
+            // ////////////////////////////////////////////////////////////
+            // Load proxy configuration Operation Mode
+            // ////////////////////////////////////////////////////////////
+
+            String operationMode = props.getProperty("operationMode");
+            if (OperationMode.SHARED_MULTITHREADED.equalsIgnoreCase(operationMode)
+                    || OperationMode.PER_REQUEST.equalsIgnoreCase(operationMode)
+                    || OperationMode.PER_SESSION.equalsIgnoreCase(operationMode)) {
+                this.setOperationMode(operationMode);
+            } else {
+                this.setOperationMode(OperationMode.SHARED_MULTITHREADED);
             }
-            else {
-            	this.setOperationMode(OperationMode.SHARED_MULTITHREADED);
-            }
-        	
+
             // ////////////////////////////////////////////////////////////
             // Load proxy configuration Preeptive Auth
             // ////////////////////////////////////////////////////////////
             String preemptiveAuthorizationStr = props.getProperty("preemptiveAuthorization");
             this.setAuthorizationPreemptive(preemptiveAuthorizationStr != null ? Boolean.parseBoolean(preemptiveAuthorizationStr)
                     : false);
-        
-	        // ////////////////////////////////////////////////////////////
-	        // Load proxy configuration white lists from properties file
-	        // ////////////////////////////////////////////////////////////
 
+            // ////////////////////////////////////////////////////////////
+            // Load proxy configuration white lists from properties file
+            // ////////////////////////////////////////////////////////////
             Set<String> p = Utils.parseWhiteList(props.getProperty("hostnameWhitelist"));
-            if (p != null)
+            if (p != null) {
                 this.setHostnameWhitelist(p);
+            }
 
             p = Utils.parseWhiteList(props.getProperty("mimetypeWhitelist"));
-            if (p != null)
+            if (p != null) {
                 this.setMimetypeWhitelist(p);
+            }
 
             p = Utils.parseWhiteList(props.getProperty("methodsWhitelist"));
-            if (p != null)
+            if (p != null) {
                 this.setMethodsWhitelist(p);
+            }
 
             p = Utils.parseWhiteList(props.getProperty("hostsWhitelist"));
-            if (p != null)
+            if (p != null) {
                 this.setHostsWhitelist(p);
+            }
 
             // ////////////////////////////////////////
             // Read various request type properties
             // ////////////////////////////////////////
-
             Set<String> rt = new HashSet<String>();
             String s = props.getProperty("reqtypeWhitelist.capabilities");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
+            }
 
             s = props.getProperty("reqtypeWhitelist.geostore");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
+            }
 
             s = props.getProperty("reqtypeWhitelist.csw");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
-            
+            }
+
             s = props.getProperty("reqtypeWhitelist.featureinfo");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
-            
+            }
+
             s = props.getProperty("reqtypeWhitelist.generic");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
+            }
 
             this.setReqtypeWhitelist(rt);
 
@@ -194,16 +204,15 @@ final class ProxyConfig {
                 // Load byte size configuration from
                 // properties file.
                 // /////////////////////////////////////////////////
-            	
+
                 String bytesSize = props.getProperty("defaultStreamByteSize");
-                this.setDefaultStreamByteSize(bytesSize != null ? Integer.parseInt(bytesSize) : 
-                	this.defaultStreamByteSize);
-                
+                this.setDefaultStreamByteSize(bytesSize != null ? Integer.parseInt(bytesSize)
+                        : this.defaultStreamByteSize);
+
                 // /////////////////////////////////////////////////
                 // Load connection manager configuration from
                 // properties file.
                 // /////////////////////////////////////////////////
-                
                 String timeout = props.getProperty("timeout");
                 this.setSoTimeout(timeout != null ? Integer.parseInt(timeout) : this.soTimeout);
 
@@ -220,9 +229,10 @@ final class ProxyConfig {
                         : this.defaultMaxConnectionsPerHost);
 
             } catch (NumberFormatException e) {
-                if (LOGGER.isLoggable(Level.SEVERE))
+                if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.log(Level.SEVERE,
                             "Error parsing the proxy properties file using default", e);
+                }
 
                 this.setSoTimeout(this.soTimeout);
                 this.setConnectionTimeout(this.connectionTimeout);
@@ -235,36 +245,41 @@ final class ProxyConfig {
 
     /**
      * Read the proxy properties file.
-     * 
+     *
      * @return Properties
      */
     public Properties propertiesLoader() {
-        InputStream inputStream = ProxyConfig.class.getResourceAsStream(propertiesFilePath);
-        Properties props = new Properties();
-
+        InputStream inputStream;
         try {
+            inputStream = new FileInputStream(this.context.getRealPath("/") + propertiesFilePath);
+            Properties props = new Properties();
 
             if (inputStream != null) {
                 props.load(inputStream);
                 return props;
             } else {
-                if (LOGGER.isLoggable(Level.SEVERE))
+                if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.log(Level.SEVERE, "The properties file InputStream is null");
+                }
                 return null;
             }
 
         } catch (IOException e) {
-            if (LOGGER.isLoggable(Level.SEVERE))
+            if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, "Error loading the proxy properties file ", e);
+            }
             return null;
         } finally {
+            /*
             try {
-                if (inputStream != null)
+                if (inputStream != null) {
                     inputStream.close();
+                }
             } catch (IOException e) {
-                if (LOGGER.isLoggable(Level.SEVERE))
+                if (LOGGER.isLoggable(Level.SEVERE)) {
                     LOGGER.log(Level.SEVERE, "Error building the proxy configuration ", e);
-            }
+                }
+            }*/
         }
     }
 
@@ -318,7 +333,8 @@ final class ProxyConfig {
     }
 
     /**
-     * @param defaultMaxConnectionsPerHost the defaultMaxConnectionsPerHost to set
+     * @param defaultMaxConnectionsPerHost the defaultMaxConnectionsPerHost to
+     * set
      */
     public void setDefaultMaxConnectionsPerHost(int defaultMaxConnectionsPerHost) {
         this.defaultMaxConnectionsPerHost = defaultMaxConnectionsPerHost;
@@ -332,8 +348,9 @@ final class ProxyConfig {
 
         if (props != null) {
             Set<String> set = Utils.parseWhiteList(props.getProperty("hostnameWhitelist"));
-            if (set != null)
+            if (set != null) {
                 this.setHostnameWhitelist(set);
+            }
         }
 
         return hostnameWhitelist;
@@ -354,8 +371,9 @@ final class ProxyConfig {
 
         if (props != null) {
             Set<String> set = Utils.parseWhiteList(props.getProperty("mimetypeWhitelist"));
-            if (set != null)
+            if (set != null) {
                 this.setMimetypeWhitelist(set);
+            }
         }
 
         return mimetypeWhitelist;
@@ -377,24 +395,29 @@ final class ProxyConfig {
         if (props != null) {
             Set<String> rt = new HashSet<String>();
             String s = props.getProperty("reqtypeWhitelist.capabilities");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
+            }
 
             s = props.getProperty("reqtypeWhitelist.geostore");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
+            }
 
             s = props.getProperty("reqtypeWhitelist.csw");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
-            
+            }
+
             s = props.getProperty("reqtypeWhitelist.featureinfo");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
-            
+            }
+
             s = props.getProperty("reqtypeWhitelist.generic");
-            if (s != null)
+            if (s != null) {
                 rt.add(s);
+            }
 
             this.setReqtypeWhitelist(rt);
         }
@@ -417,8 +440,9 @@ final class ProxyConfig {
 
         if (props != null) {
             Set<String> set = Utils.parseWhiteList(props.getProperty("methodsWhitelist"));
-            if (set != null)
+            if (set != null) {
                 this.setMethodsWhitelist(set);
+            }
         }
 
         return methodsWhitelist;
@@ -439,8 +463,9 @@ final class ProxyConfig {
 
         if (props != null) {
             Set<String> set = Utils.parseWhiteList(props.getProperty("hostsWhitelist"));
-            if (set != null)
+            if (set != null) {
                 this.setHostsWhitelist(set);
+            }
         }
 
         return hostsWhitelist;
@@ -480,35 +505,35 @@ final class ProxyConfig {
     public void setPropertiesFilePath(String propertiesFilePath) {
         this.propertiesFilePath = propertiesFilePath;
     }
-    
+
     /**
-	 * @return the defaultStreamByteSize
-	 */
-	public int getDefaultStreamByteSize() {
-		return defaultStreamByteSize;
-	}
+     * @return the defaultStreamByteSize
+     */
+    public int getDefaultStreamByteSize() {
+        return defaultStreamByteSize;
+    }
 
-	/**
-	 * @param defaultStreamByteSize the defaultStreamByteSize to set
-	 */
-	public void setDefaultStreamByteSize(int defaultStreamByteSize) {
-		this.defaultStreamByteSize = defaultStreamByteSize;
-	}
+    /**
+     * @param defaultStreamByteSize the defaultStreamByteSize to set
+     */
+    public void setDefaultStreamByteSize(int defaultStreamByteSize) {
+        this.defaultStreamByteSize = defaultStreamByteSize;
+    }
 
-	public String getOperationMode() {
-		return operationMode;
-	}
+    public String getOperationMode() {
+        return operationMode;
+    }
 
-	public void setOperationMode(String operationMode) {
-		this.operationMode = operationMode;
-	}
+    public void setOperationMode(String operationMode) {
+        this.operationMode = operationMode;
+    }
 
-	public boolean isAuthorizationPreemptive() {
-		return isAuthorizationPreemptive;
-	}
+    public boolean isAuthorizationPreemptive() {
+        return isAuthorizationPreemptive;
+    }
 
-	public void setAuthorizationPreemptive(boolean isAuthorizationPreemptive) {
-		this.isAuthorizationPreemptive = isAuthorizationPreemptive;
-	}
+    public void setAuthorizationPreemptive(boolean isAuthorizationPreemptive) {
+        this.isAuthorizationPreemptive = isAuthorizationPreemptive;
+    }
 
 }
