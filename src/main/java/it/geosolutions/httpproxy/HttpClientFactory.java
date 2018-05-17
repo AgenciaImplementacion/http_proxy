@@ -88,7 +88,7 @@ public class HttpClientFactory {
     }
 
     public HttpClient getHttpClient(HttpServletRequest httpServletRequest, boolean singleRequestOverride) {
-        System.err.println("FELIPE");
+
         if (OperationMode.SHARED_MULTITHREADED.equals(proxyConfig.getOperationMode()) && !singleRequestOverride) {
             //Shared 
             HttpClient httpClient = multiThreadedHttpClient;
