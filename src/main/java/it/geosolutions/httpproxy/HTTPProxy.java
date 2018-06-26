@@ -64,6 +64,7 @@ import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.RequestContext;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 
 /**
  * HTTPProxy class.
@@ -645,7 +646,7 @@ public class HTTPProxy extends HttpServlet {
             // /////////////////////////////////////
 
             List<FileItem> listFileItems = (List<FileItem>) servletFileUpload
-                    .parseRequest((RequestContext) httpServletRequest);
+                    .parseRequest(new ServletRequestContext(httpServletRequest));
 
             // /////////////////////////////////////////
             // Create a list to hold all of the parts
